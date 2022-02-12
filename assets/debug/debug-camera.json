@@ -1,0 +1,16 @@
+{
+  "enableDebugCamera": true,
+  "maxZoomIn": 0.025,
+  "minZoomOut": 10,
+  "moveSpeed": 20,
+  "zoomSpeed": 2,
+  "zoomStart": 1,
+  "leftKey": "A",
+  "rightKey": "D",
+  "upKey": "W",
+  "downKey": "S",
+  "zoomInKey": ",",
+  "zoomOutKey": ".",
+  "resetKey": "Delete",
+  "outputKey": "Enter"
+}
