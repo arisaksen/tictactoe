@@ -3,13 +3,12 @@ package com.github.arisaksen.simplektx
 import com.badlogic.gdx.backends.android.AndroidApplication
 import android.os.Bundle
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration
-import com.github.arisaksen.simplektx.ObstacleAvoidGame
 
 /** Launches the Android application.  */
 class AndroidLauncher : AndroidApplication() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        initialize(ObstacleAvoidGame(), AndroidApplicationConfiguration())
+        initialize(FlappyHappy(), AndroidApplicationConfiguration())
     }
 }

@@ -2,7 +2,7 @@ package com.github.arisaksen.simplektx.desktop
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration
-import com.github.arisaksen.simplektx.ObstacleAvoidGame
+import com.github.arisaksen.simplektx.FlappyHappy
 
 // if error class not found. Uncomment class DesktopLaunder
 // class DesktopLauncher {}
@@ -13,5 +13,5 @@ fun main(args: Array<String>) {
     config.width = 1792
     config.height = 1008
 
-    LwjglApplication(ObstacleAvoidGame(), config)
+    LwjglApplication(FlappyHappy(), config)
 }
