@@ -2,7 +2,7 @@ package com.github.arisaksen.simplektx.config
 
 object GameConfig {
 
-    const val debugMode = true
+    const val debugMode = false
 
     const val WORLD_WIDTH = 52.0f // world units
     const val WORLD_HEIGHT = 28.0f // world units

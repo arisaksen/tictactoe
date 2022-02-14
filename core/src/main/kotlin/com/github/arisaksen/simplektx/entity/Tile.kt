@@ -1,8 +1,7 @@
 package com.github.arisaksen.simplektx.entity
 
 import com.badlogic.gdx.math.Rectangle
-import com.badlogic.gdx.scenes.scene2d.InputEvent
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
+import com.github.arisaksen.simplektx.PlayerTurn
 import com.github.arisaksen.simplektx.config.GameConfig
 
 
@@ -20,7 +19,7 @@ class Tile {
         }
 
     var size = GameConfig.TILE_SIZE
-    lateinit var tileOwner: TileOwner
+    var tileOwner: TileOwner = TileOwner.NOTSET
     lateinit var debugTileName: String
 
     val bounds = Rectangle(x, y, size, size)
@@ -30,10 +29,16 @@ class Tile {
         this.y = y
     }
 
-    private fun updateBounds() = bounds.setPosition(x,y)
+    private fun updateBounds() = bounds.setPosition(x, y)
 
+    fun setTile(playerTurn: PlayerTurn) {
+        tileOwner = when (playerTurn) {
+            PlayerTurn.PLAYERX -> TileOwner.PLAYERX
+            PlayerTurn.PLAYERO -> TileOwner.PLAYERO
+        }
+    }
 }
 
-enum class TileOwner{
-    PLAYERX,PLAYERO
+enum class TileOwner {
+    PLAYERX, PLAYERO, NOTSET
 }

@@ -15,6 +15,7 @@ import com.github.arisaksen.simplektx.config.GameConfig.WORLD_HEIGHT
 import com.github.arisaksen.simplektx.config.GameConfig.WORLD_WIDTH
 import com.github.arisaksen.simplektx.config.GameConfig.debugMode
 import com.github.arisaksen.simplektx.entity.Tile
+import com.github.arisaksen.simplektx.entity.TileOwner
 import com.github.arisaksen.simplektx.util.GdxArray
 import com.github.arisaksen.simplektx.util.clearScreen
 import com.github.arisaksen.simplektx.util.debug.DebugCameraController
@@ -35,6 +36,7 @@ class GameScreen : Screen {
         setStartPosition(GameConfig.WORLD_CENTER_X, GameConfig.WORLD_CENTER_Y)
     }
 
+    private var playerTurn = PlayerTurn.PLAYERX
     private var tileArray = GdxArray<Tile>()
 
     override fun show() {
@@ -57,9 +59,8 @@ class GameScreen : Screen {
     }
 
     override fun render(delta: Float) {
-        clearScreen()
-
         renderer.projectionMatrix = camera.combined
+        clearScreen()
 
         drawBoard()
 
@@ -69,16 +70,46 @@ class GameScreen : Screen {
             debugGame()
         }
 
+        playerTurn()
+        drawPlayerMark()
+
+    }
+
+    private fun drawPlayerMark() {
+        tileArray.forEach {
+            if (it.tileOwner == TileOwner.PLAYERX) {
+                renderer.begin(ShapeRenderer.ShapeType.Line)
+                renderer.color = Color.WHITE
+                renderer.line(it.x, it.y, it.x + it.size, it.y + it.size)
+                renderer.line(it.x + it.size, it.y, it.x, it.y + it.size)
+                renderer.end()
+            } else if (it.tileOwner == TileOwner.PLAYERO) {
+                renderer.begin(ShapeRenderer.ShapeType.Line)
+                renderer.color = Color.WHITE
+                renderer.circle(it.x + it.size / 2f, it.y + it.size / 2f, it.size / 2f)
+                renderer.end()
+            }
+        }
+    }
+
+    private fun playerTurn() {
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
             val justClicked = Vector3(Gdx.input.x.toFloat(), Gdx.input.y.toFloat(), 0f)
             camera.unproject(justClicked)
             tileArray.forEach {
                 if (it.bounds.contains(justClicked.x, justClicked.y)) {
-                    log.debug("clicked ${it.debugTileName}")
+                    if (debugMode) {
+                        log.debug("clicked ${it.debugTileName}")
+                    }
+                    it.setTile(playerTurn)
+
+                    playerTurn = when (playerTurn) {
+                        PlayerTurn.PLAYERX -> PlayerTurn.PLAYERO
+                        PlayerTurn.PLAYERO -> PlayerTurn.PLAYERX
+                    }
                 }
             }
         }
-
     }
 
     private fun debugGame() {
@@ -139,4 +170,8 @@ class GameScreen : Screen {
         renderer.dispose()
     }
 
+}
+
+enum class PlayerTurn {
+    PLAYERX, PLAYERO
 }
