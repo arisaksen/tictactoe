@@ -14,9 +14,6 @@ import com.badlogic.gdx.math.Circle
 fun clearScreen(color: Color = Color.BLACK) = clearScreen(color.r, color.g, color.b, color.a)
 
 fun clearScreen(red: Float, green: Float, blue: Float, alpha: Float) {
-    // clear screen
-    // DRY - Don't repeat yourself
-    // WET - Waste everyone's time
     Gdx.gl.glClearColor(red, green, blue, alpha)
     Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
 }

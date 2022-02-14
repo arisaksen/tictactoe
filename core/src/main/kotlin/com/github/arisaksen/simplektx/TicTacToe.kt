@@ -6,11 +6,11 @@ import com.badlogic.gdx.Gdx
 import com.github.arisaksen.simplektx.util.logger
 
 
-class FlappyHappy : Game() {
+class TicTacToe : Game() {
 
     companion object {
         @JvmStatic
-        private val log = logger<FlappyHappy>()
+        private val log = logger<TicTacToe>()
     }
 
     override fun create(){

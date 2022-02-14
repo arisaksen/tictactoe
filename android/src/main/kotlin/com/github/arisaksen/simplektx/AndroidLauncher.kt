@@ -9,6 +9,6 @@ class AndroidLauncher : AndroidApplication() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        initialize(FlappyHappy(), AndroidApplicationConfiguration())
+        initialize(TicTacToe(), AndroidApplicationConfiguration())
     }
 }

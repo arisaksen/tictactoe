@@ -7,19 +7,18 @@ import com.badlogic.gdx.Screen
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
-import com.badlogic.gdx.math.MathUtils
+import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.utils.viewport.FitViewport
 import com.badlogic.gdx.utils.viewport.Viewport
-import com.github.arisaksen.simplektx.config.GameConfig.GROUND_HEIGHT
-import com.github.arisaksen.simplektx.config.GameConfig.OBSTACLE_GAP
+import com.github.arisaksen.simplektx.config.GameConfig
 import com.github.arisaksen.simplektx.config.GameConfig.WORLD_HEIGHT
 import com.github.arisaksen.simplektx.config.GameConfig.WORLD_WIDTH
-import com.github.arisaksen.simplektx.entity.ObstacleGround
-import com.github.arisaksen.simplektx.entity.ObstaclePipe
-import com.github.arisaksen.simplektx.entity.Player
+import com.github.arisaksen.simplektx.config.GameConfig.debugMode
+import com.github.arisaksen.simplektx.entity.Tile
 import com.github.arisaksen.simplektx.util.GdxArray
 import com.github.arisaksen.simplektx.util.clearScreen
-import com.github.arisaksen.simplektx.util.isKeyPressed
+import com.github.arisaksen.simplektx.util.debug.DebugCameraController
+import com.github.arisaksen.simplektx.util.drawGrid
 import com.github.arisaksen.simplektx.util.logger
 
 class GameScreen : Screen {
@@ -32,16 +31,11 @@ class GameScreen : Screen {
     private lateinit var camera: OrthographicCamera
     private lateinit var viewport: Viewport
     private lateinit var renderer: ShapeRenderer
-    private lateinit var ground: ObstacleGround
-
-    private val player = Player().apply {
-        centerPlayer(WORLD_WIDTH, WORLD_HEIGHT)
+    private val debugCameraController = DebugCameraController().apply {
+        setStartPosition(GameConfig.WORLD_CENTER_X, GameConfig.WORLD_CENTER_Y)
     }
-    private var keyPressTimer = 0f
-    private var worldGravity = 0f
 
-    private var obstacleTimer = 0f
-    private val obstacleArray = GdxArray<ObstaclePipe>()
+    private var tileArray = GdxArray<Tile>()
 
     override fun show() {
         Gdx.app.logLevel = Application.LOG_DEBUG
@@ -50,103 +44,79 @@ class GameScreen : Screen {
         viewport = FitViewport(WORLD_WIDTH, WORLD_HEIGHT, camera)
         renderer = ShapeRenderer()
 
-        ground = ObstacleGround()
-        ground.setPosition(0f, 0f)
-        ground.setSize(WORLD_WIDTH, GROUND_HEIGHT)
+        for (i in 0..2) {
+            for (y in 0..2) {
+                val tile = Tile().apply {
+                    setPosition(17f + y * 6f, 17f - i * 6f)
+                    debugTileName = "$i$y"
+                }
+                tileArray.add(tile)
+            }
+        }
 
     }
 
     override fun render(delta: Float) {
         clearScreen()
 
-
         renderer.projectionMatrix = camera.combined
-        renderer.begin(ShapeRenderer.ShapeType.Filled)
 
-        spawnNewPipes(delta)
-        drawWorld()
-        drawObstacles()
-        drawPlayer()
+        drawBoard()
 
-        obstacleArray.forEach {
-            if (it.isCollidingWith(player)) {
-                log.debug("Collition pipe!")
+        if (debugMode) {
+            debugCameraController.handleDebugInput()
+            debugCameraController.applyTo(camera)
+            debugGame()
+        }
+
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            val justClicked = Vector3(Gdx.input.x.toFloat(), Gdx.input.y.toFloat(), 0f)
+            camera.unproject(justClicked)
+            tileArray.forEach {
+                if (it.bounds.contains(justClicked.x, justClicked.y)) {
+                    log.debug("clicked ${it.debugTileName}")
+                }
             }
         }
 
-        if (ground.isCollidingWith(player)) {
-            log.debug("Collition ground!")
-        }
+    }
 
-        playerMovement(delta)
-        moveObstacle()
+    private fun debugGame() {
+        viewport.drawGrid(renderer)
+        renderer.begin(ShapeRenderer.ShapeType.Line)
+        renderer.color = Color.BLUE
+        tileArray.forEach {
+            renderer.rect(it.x, it.y, it.size, it.size)
+        }
+        renderer.end()
+    }
+
+    private fun drawBoard() {
+        renderer.begin(ShapeRenderer.ShapeType.Line)
+        renderer.color = Color.RED
+
+        // Vertical lines
+        renderer.line(WORLD_WIDTH / 2f + GameConfig.TILE_HALF_SIZE,
+            5f,
+            WORLD_WIDTH / 2f + GameConfig.TILE_HALF_SIZE,
+            23f)
+        renderer.line(WORLD_WIDTH / 2f - GameConfig.TILE_HALF_SIZE,
+            5f,
+            WORLD_WIDTH / 2f - GameConfig.TILE_HALF_SIZE,
+            23f)
+
+        // Hor
+        renderer.line(17f,
+            WORLD_HEIGHT / 2f + GameConfig.TILE_HALF_SIZE,
+            WORLD_WIDTH - 17f,
+            WORLD_HEIGHT / 2f + GameConfig.TILE_HALF_SIZE)
+        renderer.line(17f,
+            WORLD_HEIGHT / 2f - GameConfig.TILE_HALF_SIZE,
+            WORLD_WIDTH - 17f,
+            WORLD_HEIGHT / 2f - GameConfig.TILE_HALF_SIZE)
+
 
         renderer.end()
-//        viewport.drawGrid(renderer)
-    }
-
-
-    private fun moveObstacle() {
-        obstacleArray.forEach {
-            it.moveRect()
-        }
-    }
-
-    private fun playerMovement(delta: Float) {
-        if ((keyPressTimer >= Player.JUMP_TIMER) && (Input.Keys.SPACE.isKeyPressed())) {
-            keyPressTimer = 0f
-            worldGravity -= Player.JUMP
-        } else {
-            worldGravity += delta * 0.1f
-            keyPressTimer += delta
-        }
-
-        player.movePlayer(worldGravity)
-    }
-
-    private fun drawPlayer() {
-        renderer.color = Color.YELLOW
-        renderer.circle(player.x, player.y, Player.SIZE)
-    }
-
-    private fun drawWorld() {
-        renderer.color = Color.valueOf("50CEEC")
-        renderer.rect(0f, 0f, WORLD_WIDTH, WORLD_HEIGHT)
-        renderer.color = Color.BROWN
-        renderer.rect(ground.x, ground.y, ground.width, ground.height)
-    }
-
-    private fun spawnNewPipes(delta: Float) {
-        obstacleTimer += delta
-
-        if (obstacleTimer >= ObstaclePipe.OBSTACLE_SPAWN_TIME) {
-            obstacleTimer = 0f // reset timer
-
-            val obstacleLower = ObstaclePipe()
-            obstacleLower.setPosition(WORLD_WIDTH, 0f + GROUND_HEIGHT)
-            val random = MathUtils.random.nextInt(10)
-            obstacleLower.setSize(ObstaclePipe.OBSTACLE_WIDTH, ObstaclePipe.MIN_OBSTACLE_HEIGHT + random)
-            obstacleArray.add(obstacleLower)
-
-            val obstacleUpper = ObstaclePipe()
-            obstacleUpper.setPosition(
-                WORLD_WIDTH,
-                GROUND_HEIGHT + obstacleLower.height + OBSTACLE_GAP
-            )
-            obstacleUpper.setSize(
-                ObstaclePipe.OBSTACLE_WIDTH,
-                WORLD_HEIGHT - GROUND_HEIGHT - obstacleLower.height - OBSTACLE_GAP
-            )
-            obstacleArray.add(obstacleUpper)
-        }
-
-    }
-
-    private fun drawObstacles() {
-        renderer.color = Color.LIME
-        obstacleArray.forEach {
-            renderer.rect(it.x, it.y, it.width, it.height)
-        }
     }
 
     override fun resize(width: Int, height: Int) {
